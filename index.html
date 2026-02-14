@@ -7,11 +7,14 @@
     <meta name="description" content="Актуальный прогноз погоды на сегодня. Узнайте температуру, влажность, скорость ветра и условия в вашем городе.">
     <meta name="keywords" content="погода, прогноз погоды, погода сегодня, температура, влажность, ветер">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://my-seo-site.example.com/">
+    <link rel="canonical" href="https://seredun94.github.io/my-seo-site/">
     <meta property="og:title" content="Погода сегодня — точный прогноз погоды онлайн">
     <meta property="og:description" content="Актуальный прогноз погоды на сегодня. Узнайте температуру, влажность, скорость ветра и условия в вашем городе.">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script type="application/ld+json">
     {
@@ -23,41 +26,62 @@
     </script>
 </head>
 <body>
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
     <header>
+        <div class="logo">&#9730;</div>
         <h1>Погода сегодня</h1>
-        <p class="subtitle">Введите город, чтобы узнать прогноз</p>
+        <p class="subtitle">Узнайте актуальную погоду в любом городе мира</p>
     </header>
 
     <main>
         <section class="search-section">
             <form id="weather-form">
-                <input type="text" id="city-input" placeholder="Введите название города..." autocomplete="off" required>
-                <button type="submit">Узнать погоду</button>
+                <div class="search-wrapper">
+                    <span class="search-icon">&#128269;</span>
+                    <input type="text" id="city-input" placeholder="Введите город..." autocomplete="off" required>
+                    <button type="submit">Найти</button>
+                </div>
             </form>
         </section>
 
         <section id="weather-result" class="weather-card" hidden>
-            <h2 id="city-name"></h2>
-            <div class="weather-icon" id="weather-icon"></div>
-            <div class="temperature" id="temperature"></div>
-            <p class="description" id="description"></p>
+            <div class="card-header">
+                <h2 id="city-name"></h2>
+                <span class="badge" id="badge-now">Сейчас</span>
+            </div>
+            <div class="card-main">
+                <div class="weather-icon" id="weather-icon"></div>
+                <div class="temp-block">
+                    <div class="temperature" id="temperature"></div>
+                    <p class="description" id="description"></p>
+                </div>
+            </div>
             <div class="details">
                 <div class="detail-item">
+                    <div class="detail-icon">&#128167;</div>
                     <span class="label">Влажность</span>
-                    <span id="humidity"></span>
+                    <span class="detail-value" id="humidity"></span>
                 </div>
                 <div class="detail-item">
+                    <div class="detail-icon">&#127744;</div>
                     <span class="label">Ветер</span>
-                    <span id="wind"></span>
+                    <span class="detail-value" id="wind"></span>
                 </div>
                 <div class="detail-item">
-                    <span class="label">Ощущается как</span>
-                    <span id="feels-like"></span>
+                    <div class="detail-icon">&#127777;&#65039;</div>
+                    <span class="label">Ощущается</span>
+                    <span class="detail-value" id="feels-like"></span>
                 </div>
             </div>
         </section>
 
         <section id="error-message" class="error" hidden>
+            <div class="error-icon">&#128533;</div>
             <p>Город не найден. Проверьте название и попробуйте снова.</p>
         </section>
 
