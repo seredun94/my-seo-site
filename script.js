@@ -1,20 +1,35 @@
-const API_KEY = "YOUR_API_KEY";
 const form = document.getElementById("weather-form");
 const input = document.getElementById("city-input");
 const result = document.getElementById("weather-result");
 const error = document.getElementById("error-message");
 
-const icons = {
-    "01d": "\u2600\uFE0F", "01n": "\uD83C\uDF19",
-    "02d": "\u26C5", "02n": "\u2601\uFE0F",
-    "03d": "\u2601\uFE0F", "03n": "\u2601\uFE0F",
-    "04d": "\uD83C\uDF25\uFE0F", "04n": "\uD83C\uDF25\uFE0F",
-    "09d": "\uD83C\uDF27\uFE0F", "09n": "\uD83C\uDF27\uFE0F",
-    "10d": "\uD83C\uDF26\uFE0F", "10n": "\uD83C\uDF27\uFE0F",
-    "11d": "\u26C8\uFE0F", "11n": "\u26C8\uFE0F",
-    "13d": "\u2744\uFE0F", "13n": "\u2744\uFE0F",
-    "50d": "\uD83C\uDF2B\uFE0F", "50n": "\uD83C\uDF2B\uFE0F"
-};
+function getWeatherIcon(code) {
+    if (code === 0) return "\u2600\uFE0F";
+    if (code <= 3) return "\u26C5";
+    if (code <= 48) return "\uD83C\uDF2B\uFE0F";
+    if (code <= 57) return "\uD83C\uDF27\uFE0F";
+    if (code <= 67) return "\uD83C\uDF26\uFE0F";
+    if (code <= 77) return "\u2744\uFE0F";
+    if (code <= 82) return "\uD83C\uDF27\uFE0F";
+    if (code <= 86) return "\uD83C\uDF28\uFE0F";
+    if (code <= 99) return "\u26C8\uFE0F";
+    return "\uD83C\uDF24\uFE0F";
+}
+
+function getDescription(code) {
+    const desc = {
+        0: "ясно", 1: "преимущественно ясно", 2: "переменная облачность",
+        3: "пасмурно", 45: "туман", 48: "изморозь",
+        51: "лёгкая морось", 53: "морось", 55: "сильная морось",
+        61: "небольшой дождь", 63: "дождь", 65: "сильный дождь",
+        66: "ледяной дождь", 67: "сильный ледяной дождь",
+        71: "небольшой снег", 73: "снег", 75: "сильный снег",
+        77: "снежные зёрна", 80: "ливень", 81: "сильный ливень",
+        82: "очень сильный ливень", 85: "снегопад", 86: "сильный снегопад",
+        95: "гроза", 96: "гроза с градом", 99: "гроза с сильным градом"
+    };
+    return desc[code] || "неизвестно";
+}
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -25,25 +40,31 @@ form.addEventListener("submit", async (e) => {
     error.hidden = true;
 
     try {
-        const res = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=ru`
+        const geoRes = await fetch(
+            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=ru`
         );
+        const geoData = await geoRes.json();
 
-        if (!res.ok) {
+        if (!geoData.results || geoData.results.length === 0) {
             error.hidden = false;
             return;
         }
 
-        const data = await res.json();
-        const icon = data.weather[0].icon;
+        const { latitude, longitude, name, country } = geoData.results[0];
 
-        document.getElementById("city-name").textContent = `${data.name}, ${data.sys.country}`;
-        document.getElementById("weather-icon").textContent = icons[icon] || "\uD83C\uDF24\uFE0F";
-        document.getElementById("temperature").textContent = `${Math.round(data.main.temp)}\u00B0C`;
-        document.getElementById("description").textContent = data.weather[0].description;
-        document.getElementById("humidity").textContent = `${data.main.humidity}%`;
-        document.getElementById("wind").textContent = `${data.wind.speed} м/с`;
-        document.getElementById("feels-like").textContent = `${Math.round(data.main.feels_like)}\u00B0C`;
+        const weatherRes = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m`
+        );
+        const weatherData = await weatherRes.json();
+        const current = weatherData.current;
+
+        document.getElementById("city-name").textContent = `${name}, ${country}`;
+        document.getElementById("weather-icon").textContent = getWeatherIcon(current.weather_code);
+        document.getElementById("temperature").textContent = `${Math.round(current.temperature_2m)}\u00B0C`;
+        document.getElementById("description").textContent = getDescription(current.weather_code);
+        document.getElementById("humidity").textContent = `${current.relative_humidity_2m}%`;
+        document.getElementById("wind").textContent = `${current.wind_speed_10m} км/ч`;
+        document.getElementById("feels-like").textContent = `${Math.round(current.apparent_temperature)}\u00B0C`;
 
         result.hidden = false;
     } catch {
