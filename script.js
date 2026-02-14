@@ -31,6 +31,38 @@ function getDescription(code) {
     return desc[code] || "неизвестно";
 }
 
+function showWeather(name, country, current) {
+    document.getElementById("city-name").textContent = `${name}, ${country}`;
+    document.getElementById("weather-icon").textContent = getWeatherIcon(current.weather_code);
+    document.getElementById("temperature").textContent = `${Math.round(current.temperature_2m)}\u00B0C`;
+    document.getElementById("description").textContent = getDescription(current.weather_code);
+    document.getElementById("humidity").textContent = `${current.relative_humidity_2m}%`;
+    document.getElementById("wind").textContent = `${current.wind_speed_10m} \u043A\u043C/\u0447`;
+    document.getElementById("feels-like").textContent = `${Math.round(current.apparent_temperature)}\u00B0C`;
+    result.hidden = false;
+}
+
+async function fetchWeatherByCoords(lat, lon, cityName, countryName) {
+    const weatherRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m`
+    );
+    const weatherData = await weatherRes.json();
+    showWeather(cityName, countryName, weatherData.current);
+}
+
+async function loadWeatherByIP() {
+    try {
+        const ipRes = await fetch("https://ipapi.co/json/");
+        const ipData = await ipRes.json();
+        if (ipData.latitude && ipData.longitude) {
+            input.value = ipData.city || "";
+            await fetchWeatherByCoords(ipData.latitude, ipData.longitude, ipData.city, ipData.country_name);
+        }
+    } catch {
+        // ignore — user can search manually
+    }
+}
+
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const city = input.value.trim();
@@ -51,23 +83,10 @@ form.addEventListener("submit", async (e) => {
         }
 
         const { latitude, longitude, name, country } = geoData.results[0];
-
-        const weatherRes = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m`
-        );
-        const weatherData = await weatherRes.json();
-        const current = weatherData.current;
-
-        document.getElementById("city-name").textContent = `${name}, ${country}`;
-        document.getElementById("weather-icon").textContent = getWeatherIcon(current.weather_code);
-        document.getElementById("temperature").textContent = `${Math.round(current.temperature_2m)}\u00B0C`;
-        document.getElementById("description").textContent = getDescription(current.weather_code);
-        document.getElementById("humidity").textContent = `${current.relative_humidity_2m}%`;
-        document.getElementById("wind").textContent = `${current.wind_speed_10m} км/ч`;
-        document.getElementById("feels-like").textContent = `${Math.round(current.apparent_temperature)}\u00B0C`;
-
-        result.hidden = false;
+        await fetchWeatherByCoords(latitude, longitude, name, country);
     } catch {
         error.hidden = false;
     }
 });
+
+loadWeatherByIP();
